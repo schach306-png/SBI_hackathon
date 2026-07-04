@@ -14,6 +14,76 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- 1. Authentication (Login / Sign Up) Overlay -->
+    <div id="auth-container" class="auth-screen-overlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="logo-circle"></span>
+                <span class="logo-title">SBI <span class="logo-light">Life</span></span>
+            </div>
+            <h2 id="auth-title">Welcome to eWealth & Digital Hub</h2>
+            <p id="auth-subtitle" class="auth-subtitle">Please log in to your account to simulate digital banking journeys.</p>
+
+            <!-- Error Banner -->
+            <div id="auth-error-banner" class="auth-error hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span id="auth-error-msg">Invalid email or password. Please try again.</span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form" onsubmit="event.preventDefault(); handleAuthLogin();">
+                <div class="form-group">
+                    <label class="form-label" for="login-email"><i class="fa-solid fa-envelope icon-purple"></i> Email Address</label>
+                    <input type="email" id="login-email" placeholder="e.g. ananya@sbi.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-password"><i class="fa-solid fa-lock icon-purple"></i> Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+                <div class="auth-toggle">
+                    Don't have an account? <a href="#" onclick="toggleAuthForm('signup')">Sign Up here</a>
+                </div>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="auth-form hidden" onsubmit="event.preventDefault(); handleAuthSignup();">
+                <div class="form-group">
+                    <label class="form-label" for="signup-name"><i class="fa-solid fa-user icon-purple"></i> Full Name</label>
+                    <input type="text" id="signup-name" placeholder="First Name Last Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signup-email"><i class="fa-solid fa-envelope icon-purple"></i> Email Address</label>
+                    <input type="email" id="signup-email" placeholder="e.g. user@sbi.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signup-password"><i class="fa-solid fa-lock icon-purple"></i> Password</label>
+                    <input type="password" id="signup-password" placeholder="Create password" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="signup-age"><i class="fa-solid fa-calendar icon-purple"></i> Age</label>
+                        <input type="number" id="signup-age" min="18" max="100" value="25" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="signup-income"><i class="fa-solid fa-money-bill-wave icon-purple"></i> Income Tier</label>
+                        <select id="signup-income" style="width:100%; padding:10px; font-size:12px; border:1px solid var(--border-purple); border-radius:var(--radius-sm); outline:none;">
+                            <option value="less_2_5">&lt; 2.5 Lacs</option>
+                            <option value="2_5_5" selected>2.5 Lacs - 5 Lacs</option>
+                            <option value="5_7">5 Lacs - 7 Lacs</option>
+                            <option value="7_10">7 Lacs - 10 Lacs</option>
+                            <option value="more_10">&gt; 10 Lacs</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+                <div class="auth-toggle">
+                    Already have an account? <a href="#" onclick="toggleAuthForm('login')">Log In here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Dashboard Interface (unlocked upon login) -->
     <div class="app-container">
         <!-- Top Navigation Bar -->
         <header class="app-header">
@@ -33,14 +103,10 @@
             </div>
             
             <div class="header-right">
-                <!-- Persona Picker -->
-                <div class="persona-selector">
-                    <label for="persona-select"><i class="fa-solid fa-user-gear"></i> Persona:</label>
-                    <select id="persona-select" onchange="changePersona()">
-                        <option value="first_time">Ramesh Kumar (First-time Investor, Age 55)</option>
-                        <option value="young_pro" selected>Ananya Sharma (Tech Professional, Age 24)</option>
-                        <option value="rural_merchant">Vikram Singh (Rural Merchant, Age 42)</option>
-                    </select>
+                <!-- Logged In User Info -->
+                <div class="logged-user-tag">
+                    <i class="fa-solid fa-circle-user icon-purple"></i>
+                    <span id="header-user-name">Guest User</span>
                 </div>
 
                 <!-- Mode Toggles -->
@@ -52,6 +118,11 @@
                         <i class="fa-solid fa-chart-line"></i> Admin Analytics
                     </button>
                 </div>
+
+                <!-- Sign Out -->
+                <button class="btn-logout" onclick="handleAuthLogout()" title="Log Out Session">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
         </header>
 
@@ -95,17 +166,24 @@
                                         <span class="nav-desc">Voice Banking Journeys</span>
                                     </div>
                                 </button>
+                                <button class="nav-item" onclick="switchJourney('ledger')">
+                                    <span class="nav-icon"><i class="fa-solid fa-receipt"></i></span>
+                                    <div class="nav-label">
+                                        <span class="nav-title">Transaction Ledger</span>
+                                        <span class="nav-desc">Database History Logs</span>
+                                    </div>
+                                </button>
                             </nav>
 
                             <!-- Mini User Profile Info Box -->
                             <div class="user-profile-box">
                                 <div class="profile-header">
                                     <i class="fa-solid fa-circle-user"></i>
-                                    <span class="profile-name" id="user-profile-name">Ananya Sharma</span>
+                                    <span class="profile-name" id="user-profile-name">Guest</span>
                                 </div>
                                 <div class="profile-details">
-                                    <p><strong>Age:</strong> <span id="user-profile-age">24</span></p>
-                                    <p><strong>Income:</strong> <span id="user-profile-income">8.5 Lacs</span></p>
+                                    <p><strong>Age:</strong> <span id="user-profile-age">--</span></p>
+                                    <p><strong>Income:</strong> <span id="user-profile-income">--</span></p>
                                     <p><strong>Adoption Level:</strong> <span id="user-profile-level" class="level-high">Medium</span></p>
                                 </div>
                             </div>
@@ -244,7 +322,7 @@
                                             <i class="fa-solid fa-lightbulb icon-gold"></i>
                                             <h4>AI Investment Recommendation</h4>
                                         </div>
-                                        <p id="sip-ai-recommendation">Based on your age (24) and stable profile, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal. This matches your medium risk tolerance.</p>
+                                        <p id="sip-ai-recommendation">Based on your age and stable profile, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal.</p>
                                         <button class="btn btn-primary btn-sm" onclick="adoptProduct('sip')">Adopt SIP Investment Plan</button>
                                     </div>
                                 </div>
@@ -286,8 +364,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-
                                 </div>
                             </div>
 
@@ -329,6 +405,35 @@
                                                 <div class="msg-text">Hello! I am your SBI Digital Assistant. You can ask me to navigate, search policies, or execute banking tasks. Try tapping the microphone or choosing a prompt above!</div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Transaction Ledger (Database History Logs) -->
+                            <div id="journey-ledger" class="journey-card">
+                                <div class="journey-header">
+                                    <h2>Transaction & Mandate Ledger</h2>
+                                    <p class="subtitle">Secure database entries registered during your digital simulator session</p>
+                                </div>
+                                <div class="journey-body">
+                                    <div class="ledger-table-container">
+                                        <table class="ledger-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Transaction ID</th>
+                                                    <th>Type</th>
+                                                    <th>Description</th>
+                                                    <th>Amount (₹)</th>
+                                                    <th>Timestamp</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="user-ledger-tbody">
+                                                <!-- Dynamic transaction logs loaded via API -->
+                                                <tr>
+                                                    <td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No transactions recorded in database. Make a payment, SIP mandate, or policy submission first!</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -447,28 +552,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="admin-logs-tbody">
-                                            <!-- Log records generated dynamically in app.js -->
-                                            <tr>
-                                                <td class="log-time">14:12:02</td>
-                                                <td><span class="log-profile">Ramesh (Elderly)</span></td>
-                                                <td><span class="badge-tag tag-ins">Insurance</span></td>
-                                                <td class="log-friction">Form paused on DOB (22s)</td>
-                                                <td class="log-action"><span class="badge-action green">Calculated Age & Autocompleted</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="log-time">14:10:45</td>
-                                                <td><span class="log-profile">Ananya (Young Pro)</span></td>
-                                                <td><span class="badge-tag tag-pay">Payments</span></td>
-                                                <td class="log-friction">Hesitation on UPI Lite limits</td>
-                                                <td class="log-action"><span class="badge-action blue">Provided Micro-comparison</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="log-time">14:08:15</td>
-                                                <td><span class="log-profile">Vikram (Merchant)</span></td>
-                                                <td><span class="badge-tag tag-inv">Investments</span></td>
-                                                <td class="log-friction">Confused by compound interest SIP math</td>
-                                                <td class="log-action"><span class="badge-action orange">Triggered SVG return planner tooltip</span></td>
-                                            </tr>
+                                            <!-- Dynamic admin logs -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -498,7 +582,6 @@
                     <div class="window-title"><i class="fa-solid fa-code"></i> AI CO-PILOT REASONING LOG</div>
                     <div class="log-entries" id="copilot-logs">
                         <div class="log-entry log-system">[SYS] AI Co-Pilot Core V2.4 initialized. Ready to assist.</div>
-                        <div class="log-entry log-success">[AI] Loaded user profile: Ananya Sharma (Medium digital maturity).</div>
                     </div>
                 </div>
 

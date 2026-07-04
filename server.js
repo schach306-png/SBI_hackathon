@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DB_FILE = path.join(__dirname, 'db.json');
 
 app.use(cors());
 app.use(express.json());
@@ -11,53 +13,154 @@ app.use(express.json());
 // Serve static assets from current folder
 app.use(express.static(path.join(__dirname)));
 
-// Mock In-memory Database
-let activePersonaId = "young_pro";
-
-const profiles = {
-    first_time: {
-        name: "Ramesh Kumar",
-        age: 55,
-        income: "4.8 Lacs",
-        incomeVal: "2.5 - 5",
-        level: "Low",
-        fname: "Ramesh",
-        lname: "Kumar",
-        dob: "15/08/1971",
-        risk: "Low (Conservative)",
-        aiAdvice: "Ramesh, at age 55, capital safety is priority. The SBI Conservative Hybrid Mutual Fund is ideal. Starting an autopay SIP of ₹ 2,000 ensures disciplined growth with minimum digital friction.",
-        paymentSetup: { upi: false, autopay: false }
-    },
-    young_pro: {
-        name: "Ananya Sharma",
-        age: 24,
-        income: "8.5 Lacs",
-        incomeVal: "7 - 10",
-        level: "Medium",
-        fname: "Ananya",
-        lname: "Sharma",
-        dob: "22/11/2002",
-        risk: "High (Aggressive)",
-        aiAdvice: "Based on your age (24) and high growth window, starting an equity-heavy SIP in SBI Bluechip Fund or Small Cap Fund of ₹ 5,000 for 10+ years is ideal to beat inflation.",
-        paymentSetup: { upi: false, autopay: false }
-    },
-    rural_merchant: {
-        name: "Vikram Singh",
-        age: 42,
-        income: "6.2 Lacs",
-        incomeVal: "5 - 7",
-        level: "Medium",
-        fname: "Vikram",
-        lname: "Singh",
-        dob: "04/04/1984",
-        risk: "Moderate (Balanced)",
-        aiAdvice: "Vikram, to secure your shop earnings, we recommend an SBI Equity Hybrid Fund SIP of ₹ 3,000. It balances safety and equity growth with easy mobile monitoring.",
-        paymentSetup: { upi: false, autopay: false }
+// Helper: Read Database
+function readDB() {
+    try {
+        if (!fs.existsSync(DB_FILE)) {
+            // write empty template if not exists
+            const template = { users: [], transactions: [] };
+            fs.writeFileSync(DB_FILE, JSON.stringify(template, null, 2));
+            return template;
+        }
+        const data = fs.readFileSync(DB_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Error reading database:", err);
+        return { users: [], transactions: [] };
     }
-};
+}
 
-let submittedOnboarding = [];
-let activeMandates = [];
+// Helper: Write Database
+function writeDB(data) {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    } catch (err) {
+        console.error("Error writing database:", err);
+    }
+}
+
+// API: User Sign Up
+app.post('/api/auth/signup', (req, res) => {
+    const { name, email, password, age, incomeGroup } = req.body;
+    
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: "Name, email, and password are required." });
+    }
+
+    const db = readDB();
+    const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    if (existing) {
+        return res.status(400).json({ error: "An account with this email already exists." });
+    }
+
+    // Map income group value to standard SBI levels
+    let incomeText = "2.5 - 5 Lacs";
+    let incomeVal = "2.5 - 5";
+    if (incomeGroup === "less_2_5") { incomeText = "< 2.5 Lacs"; incomeVal = "< 2.5"; }
+    else if (incomeGroup === "5_7") { incomeText = "5 - 7 Lacs"; incomeVal = "5 - 7"; }
+    else if (incomeGroup === "7_10") { incomeText = "7 - 10 Lacs"; incomeVal = "7 - 10"; }
+    else if (incomeGroup === "more_10") { incomeText = "> 10 Lacs"; incomeVal = "> 10"; }
+
+    const userAge = parseInt(age) || 25;
+    let userLevel = "Medium";
+    if (userAge > 50) userLevel = "Low";
+
+    const newUser = {
+        id: "user_" + Math.floor(100000 + Math.random() * 900000),
+        name,
+        email,
+        password, // stored plain text for simulation simplicity
+        age: userAge,
+        income: incomeText,
+        incomeVal: incomeVal,
+        level: userLevel,
+        dob: "01/01/" + (new Date().getFullYear() - userAge), // mock dob
+        risk: userLevel === "Low" ? "Low (Conservative)" : "High (Aggressive)",
+        aiAdvice: `Based on your age (${userAge}) and profile, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal to beat inflation.`,
+        paymentSetup: { upi: false, autopay: false }
+    };
+
+    db.users.push(newUser);
+    writeDB(db);
+
+    res.json({ success: true, user: { id: newUser.id, name: newUser.name, email: newUser.email } });
+});
+
+// API: User Log In
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required." });
+    }
+
+    const db = readDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Invalid email or password. Please try again." });
+    }
+
+    res.json({
+        success: true,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            age: user.age,
+            income: user.income,
+            incomeVal: user.incomeVal,
+            level: user.level,
+            dob: user.dob,
+            risk: user.risk,
+            aiAdvice: user.aiAdvice,
+            paymentSetup: user.paymentSetup
+        }
+    });
+});
+
+// API: Add Transaction
+app.post('/api/transactions', (req, res) => {
+    const { email, type, description, amount } = req.body;
+    
+    if (!email || !type) {
+        return res.status(400).json({ error: "Email and transaction type are required." });
+    }
+
+    const db = readDB();
+    const newTxn = {
+        id: "TXN-" + Math.floor(100000 + Math.random() * 900000),
+        userEmail: email,
+        type,
+        description,
+        amount: amount || "0",
+        timestamp: new Date().toISOString()
+    };
+
+    db.transactions.push(newTxn);
+    writeDB(db);
+
+    res.json({ success: true, transaction: newTxn });
+});
+
+// API: Get Transactions
+app.get('/api/transactions', (req, res) => {
+    const { email } = req.query;
+    if (!email) {
+        return res.status(400).json({ error: "User email is required" });
+    }
+    
+    const db = readDB();
+    const userTxns = db.transactions.filter(t => t.userEmail.toLowerCase() === email.toLowerCase());
+    
+    // Sort transactions reverse chronological
+    userTxns.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    res.json({ transactions: userTxns });
+});
+
+// Mock In-memory Admin Log states (clears on restart, persistent in memory for the active session)
 let adminLogs = [
     {
         time: "14:12:02",
@@ -74,81 +177,8 @@ let adminLogs = [
         friction: "Hesitation on UPI Lite limits",
         action: "Provided Micro-comparison",
         actionColor: "blue"
-    },
-    {
-        time: "14:08:15",
-        profileName: "Vikram",
-        product: "Investments",
-        friction: "Confused by compound interest SIP math",
-        action: "Triggered SVG return planner tooltip",
-        actionColor: "orange"
     }
 ];
-
-// API: Get Active Profile
-app.get('/api/persona', (req, res) => {
-    res.json({
-        activeId: activePersonaId,
-        profile: profiles[activePersonaId]
-    });
-});
-
-// API: Set Active Profile
-app.post('/api/persona', (req, res) => {
-    const { id } = req.body;
-    if (profiles[id]) {
-        activePersonaId = id;
-        res.json({ success: true, activeId: activePersonaId, profile: profiles[activePersonaId] });
-    } else {
-        res.status(400).json({ error: "Invalid profile ID" });
-    }
-});
-
-// API: Submit Onboarding details (Insurance form)
-app.post('/api/insurance/onboard', (req, res) => {
-    const { fname, lname, dob, income, beneficiary, medicalWaiver } = req.body;
-    const application = {
-        id: "INS-" + Math.floor(100000 + Math.random() * 900000),
-        persona: activePersonaId,
-        fname,
-        lname,
-        dob,
-        income,
-        beneficiary,
-        medicalWaiver: !!medicalWaiver,
-        timestamp: new Date().toISOString()
-    };
-    submittedOnboarding.push(application);
-    res.json({ success: true, application });
-});
-
-// API: Setup UPI Lite wallet
-app.post('/api/payments/upi', (req, res) => {
-    const { amount, bankAccount } = req.body;
-    profiles[activePersonaId].paymentSetup.upi = true;
-    const mandate = {
-        type: "UPI Lite",
-        amount,
-        bankAccount,
-        timestamp: new Date().toISOString()
-    };
-    activeMandates.push(mandate);
-    res.json({ success: true, mandate });
-});
-
-// API: Setup Autopay
-app.post('/api/payments/autopay', (req, res) => {
-    const { biller, limit } = req.body;
-    profiles[activePersonaId].paymentSetup.autopay = true;
-    const mandate = {
-        type: "Autopay",
-        biller,
-        limit,
-        timestamp: new Date().toISOString()
-    };
-    activeMandates.push(mandate);
-    res.json({ success: true, mandate });
-});
 
 // API: Admin Logs
 app.get('/api/admin/logs', (req, res) => {

@@ -1,17 +1,23 @@
 // SBI Digital Adoption Hub - Pillar 2 (Agentic AI) Simulation Logic
-// Upgraded to connect to the Node.js/Express Backend API
+// Upgraded to support User Sign Up, Log In, and Transaction ledgers in JSON Database
 
-// Local backup definitions (used if backend fetch fails)
-let currentPersonaId = "young_pro";
 let activeJourney = "insurance";
 let voiceListening = false;
 let adminInterventionsCount = 1842;
-let localProfileCache = null;
+let currentUser = null; 
+let attachedWaiver = false;
+let voiceRecognitionInstance = null;
 
 // Initialize app
 document.addEventListener("DOMContentLoaded", () => {
-    // Switch to active persona from API
-    syncActivePersona();
+    // Check if session exists in localStorage
+    const savedUser = localStorage.getItem("sbi_user_session");
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        unlockDashboard(currentUser);
+    } else {
+        showAuthScreen();
+    }
     
     // Auto-update SIP Planner
     updateSipCalculation();
@@ -19,85 +25,176 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set up hover tracking for form friction simulation
     setupFrictionTracking();
 
-    // Load admin logs
-    refreshAdminLogs();
-
-    // Log startup
-    addCopilotLog("Agentic AI engine standing by. Hover over inputs to trigger context analysis.", "system");
+    // Init Web Speech
+    initWebSpeechRecognition();
 });
 
-// Sync active persona details from backend
-async function syncActivePersona() {
-    try {
-        const response = await fetch('/api/persona');
-        const data = await response.json();
-        currentPersonaId = data.activeId;
-        localProfileCache = data.profile;
+// Authentication Screens Management
+function showAuthScreen() {
+    const authOverlay = document.getElementById("auth-container");
+    if (authOverlay) authOverlay.classList.remove("hidden");
+    addCopilotLog("[SYS] Auth overlay active. Awaiting user sign-in.", "system");
+}
 
-        // Set value in selector
-        const select = document.getElementById("persona-select");
-        if (select) select.value = currentPersonaId;
+function hideAuthScreen() {
+    const authOverlay = document.getElementById("auth-container");
+    if (authOverlay) authOverlay.classList.add("hidden");
+}
 
-        updateProfileUI(data.profile);
-    } catch (err) {
-        console.error("API error, falling back to local simulation:", err);
-        // Fallback fallback profiles
-        const fallback = {
-            name: "Ananya Sharma", age: 24, income: "8.5 Lacs", level: "Medium", dob: "22/11/2002",
-            aiAdvice: "Based on your age (24) and high growth window, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal to beat inflation."
-        };
-        localProfileCache = fallback;
-        updateProfileUI(fallback);
+function toggleAuthForm(formMode) {
+    const loginForm = document.getElementById("login-form");
+    const signupForm = document.getElementById("signup-form");
+    const title = document.getElementById("auth-title");
+    const subtitle = document.getElementById("auth-subtitle");
+    const errorBanner = document.getElementById("auth-error-banner");
+
+    errorBanner.classList.add("hidden");
+
+    if (formMode === "signup") {
+        loginForm.classList.add("hidden");
+        signupForm.classList.remove("hidden");
+        title.textContent = "Create SBI Digital Account";
+        subtitle.textContent = "Fill in your details below to establish your profile credentials.";
+    } else {
+        loginForm.classList.remove("hidden");
+        signupForm.classList.add("hidden");
+        title.textContent = "Welcome to eWealth & Digital Hub";
+        subtitle.textContent = "Please log in to your account to simulate digital banking journeys.";
     }
 }
 
-// UI update helper
-function updateProfileUI(profile) {
-    document.getElementById("user-profile-name").textContent = profile.name;
-    document.getElementById("user-profile-age").textContent = profile.age;
-    document.getElementById("user-profile-income").textContent = profile.income;
+// API: Handle Login
+async function handleAuthLogin() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const errorBanner = document.getElementById("auth-error-banner");
+    const errorMsg = document.getElementById("auth-error-msg");
+
+    errorBanner.classList.add("hidden");
+
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || "Login failed");
+        }
+
+        const data = await response.json();
+        currentUser = data.user;
+        
+        // Save session locally
+        localStorage.setItem("sbi_user_session", JSON.stringify(currentUser));
+        
+        unlockDashboard(currentUser);
+        addCopilotLog(`[SYS] User ${currentUser.name} successfully authenticated from JSON database.`, "success");
+    } catch (err) {
+        errorMsg.textContent = err.message;
+        errorBanner.classList.remove("hidden");
+        addCopilotLog(`[WARNING] Failed login attempt for ${email}: ${err.message}`, "warning");
+    }
+}
+
+// API: Handle Signup
+async function handleAuthSignup() {
+    const name = document.getElementById("signup-name").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const age = document.getElementById("signup-age").value;
+    const incomeGroup = document.getElementById("signup-income").value;
+    
+    const errorBanner = document.getElementById("auth-error-banner");
+    const errorMsg = document.getElementById("auth-error-msg");
+
+    errorBanner.classList.add("hidden");
+
+    try {
+        const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, age, incomeGroup })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || "Registration failed");
+        }
+
+        addCopilotLog(`[SYS] Profile registered successfully for ${name}. Toggling to login...`, "success");
+        
+        // Switch to login form automatically and pre-fill email
+        toggleAuthForm('login');
+        document.getElementById("login-email").value = email;
+        document.getElementById("login-password").value = "";
+        
+        // Show success alert in error banner (using green theme style)
+        errorMsg.textContent = "Account created successfully! Please enter your password to log in.";
+        errorBanner.className = "auth-error"; // remove danger line
+        errorBanner.style.borderLeftColor = "var(--success-green)";
+        errorBanner.style.backgroundColor = "var(--success-bg)";
+        errorBanner.style.color = "var(--success-green)";
+        errorBanner.classList.remove("hidden");
+    } catch (err) {
+        errorMsg.textContent = err.message;
+        errorBanner.className = "auth-error"; // reset to danger style
+        errorBanner.style.borderLeftColor = "";
+        errorBanner.style.backgroundColor = "";
+        errorBanner.style.color = "";
+        errorBanner.classList.remove("hidden");
+        addCopilotLog(`[WARNING] Registration failure: ${err.message}`, "warning");
+    }
+}
+
+// API: Log Out
+function handleAuthLogout() {
+    localStorage.removeItem("sbi_user_session");
+    currentUser = null;
+    document.getElementById("login-email").value = "";
+    document.getElementById("login-password").value = "";
+    
+    // Reset forms
+    resetInsuranceForm();
+    
+    // Hide dashboard contents
+    showAuthScreen();
+    addCopilotLog("[SYS] Active session terminated. Database lock applied.", "system");
+}
+
+// Unlock UI Dashboard
+function unlockDashboard(user) {
+    hideAuthScreen();
+    
+    // Update Header tag
+    document.getElementById("header-user-name").textContent = user.name;
+    
+    // Update Sidebar Profile details
+    document.getElementById("user-profile-name").textContent = user.name;
+    document.getElementById("user-profile-age").textContent = user.age;
+    document.getElementById("user-profile-income").textContent = user.income;
     
     const levelSpan = document.getElementById("user-profile-level");
-    levelSpan.textContent = profile.level;
-    levelSpan.className = ""; // clear
-    if (profile.level === "Low") {
+    levelSpan.textContent = user.level;
+    levelSpan.className = "";
+    if (user.level === "Low") {
         levelSpan.classList.add("trend-down");
     } else {
         levelSpan.classList.add("level-high");
     }
 
-    // Update SIP Recommendations text
+    // Update Recommendations and tab defaults
     const recText = document.getElementById("sip-ai-recommendation");
-    if (recText) recText.textContent = profile.aiAdvice;
+    if (recText) recText.textContent = user.aiAdvice;
 
-    // Reset forms
     resetInsuranceForm();
+    refreshAdminLogs();
+    refreshLedgerTable();
 }
 
-// Switch Persona via API
-async function changePersona() {
-    const select = document.getElementById("persona-select");
-    const id = select.value;
-    try {
-        const response = await fetch('/api/persona', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
-        });
-        const data = await response.json();
-        
-        currentPersonaId = data.activeId;
-        localProfileCache = data.profile;
-        updateProfileUI(data.profile);
-        
-        addCopilotLog(`[AI] Behavior profile updated for ${data.profile.name}. Adaptive guidance strategy adjusted to: ${data.profile.level} digital confidence.`, "info");
-    } catch (err) {
-        console.error(err);
-    }
-    closePhoneSimulation();
-}
-
-// Mode Switching (Customer Simulator vs Admin Analytics)
+// Mode Switching (Simulator vs Admin)
 function switchMode(mode) {
     const btnSim = document.getElementById("btn-mode-simulator");
     const btnAdmin = document.getElementById("btn-mode-admin");
@@ -138,27 +235,8 @@ function switchJourney(journey) {
 
     addCopilotLog(`[SYS] Switched simulated journey to: ${journey.toUpperCase()}`, "system");
 
-    // Contextual initial nudge based on tab
-    if (journey === "insurance") {
-        triggerNudge("SBI eWealth Onboarding", 
-            "Hover over the annual income options or DOB field. Notice how the AI guides inputs or autocalculates details dynamically. Click 'Auto-fill' at the top to see AI complete the form instantly.",
-            `<button class="nudge-btn nudge-btn-primary" onclick="triggerAiAutocomplete()">Simulate Auto-fill</button>`
-        );
-    } else if (journey === "investments") {
-        triggerNudge("SIP & Wealth Advisor", 
-            "Move the investment sliders. The dynamic compound calculator uses standard compounding equations to visualize returns. The AI recommends funds based on the active persona profile.",
-            `<button class="nudge-btn" onclick="simulateVoiceCommand('What is the interest rate of a 1-year Fixed Deposit?')">Ask interest rate</button>`
-        );
-    } else if (journey === "payments") {
-        triggerNudge("Payments Adoption Helper", 
-            "Digital payments can be intimidating for some users. AI Lite provides micro-wizards that simulate the steps in detail. Click 'Activate Now' under UPI Lite to see the guided setup flow.",
-            `<button class="nudge-btn nudge-btn-primary" onclick="startUpiActivation()">Activate UPI Lite</button>`
-        );
-    } else if (journey === "mobile") {
-        triggerNudge("Conversational Assistant", 
-            "The Agentic Mobile Banking assistant supports voice and text commands to automate customer actions. Select any prompt chip below to see it navigate the app.",
-            `<button class="nudge-btn" onclick="simulateVoiceCommand('Compare term insurance plans')">Select Promo Chip</button>`
-        );
+    if (journey === "ledger") {
+        refreshLedgerTable();
     }
 }
 
@@ -226,17 +304,16 @@ function setupFrictionTracking() {
         incomeGroup.addEventListener("mouseenter", () => {
             addCopilotLog(`[AI] User is evaluating income group options. Matching against verified persona...`, "thought");
             triggerNudge("Income Documentation", 
-                `Based on tax filing records, your annual income bracket is estimated in the "${localProfileCache ? localProfileCache.income : 'Medium'}" range. Select this bracket to skip verification documents.`,
+                `Based on tax filing records, your annual income bracket is estimated in the "${currentUser ? currentUser.income : 'Medium'}" range. Select this bracket to skip verification documents.`,
                 `<button class="nudge-btn nudge-btn-primary" onclick="selectProfileIncome()">Select Recommended Bracket</button>`
             );
         });
     }
 }
 
-// Select Recommended Profile Income
 function selectProfileIncome() {
-    if (!localProfileCache) return;
-    const value = localProfileCache.incomeVal;
+    if (!currentUser) return;
+    const value = currentUser.incomeVal;
     const btn = Array.from(document.querySelectorAll(".income-btn")).find(b => b.getAttribute("data-value") === value);
     if (btn) {
         selectIncome(btn);
@@ -244,18 +321,16 @@ function selectProfileIncome() {
     }
 }
 
-// Simulated DOB Auto-fill
 function simulateDobFill() {
-    if (!localProfileCache) return;
+    if (!currentUser) return;
     const input = document.getElementById("input-dob");
     if (input) {
-        input.value = localProfileCache.dob;
+        input.value = currentUser.dob;
         onDobInput(input);
-        addCopilotLog(`[AI] Autocompleted Date of Birth to '${localProfileCache.dob}' based on official ID registry.`, "success");
+        addCopilotLog(`[AI] Autocompleted Date of Birth to '${currentUser.dob}' based on official ID registry.`, "success");
     }
 }
 
-// Interactive Insurance Form Functions
 function selectIncome(btn) {
     const buttons = document.querySelectorAll(".income-btn");
     buttons.forEach(b => b.classList.remove("active"));
@@ -264,7 +339,7 @@ function selectIncome(btn) {
     const val = btn.getAttribute("data-value");
     addCopilotLog(`[AI] User selected income tier: ${val} Lacs`, "info");
     
-    logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Insurance", `Selected Income bracket ${val} Lacs`, "Verified and stored");
+    logAdminIntervention(currentUser ? currentUser.name : "User", "Insurance", `Selected Income bracket ${val} Lacs`, "Verified and stored");
 }
 
 function selectBeneficiary(btn) {
@@ -276,7 +351,6 @@ function selectBeneficiary(btn) {
     addCopilotLog(`[AI] Policy beneficiary selected: ${val}`, "info");
 }
 
-// DOB Input event
 function onDobInput(input) {
     const val = input.value;
     const ageCalcSpan = document.getElementById("span-age-calc");
@@ -301,7 +375,7 @@ function onDobInput(input) {
                     addCopilotLog(`[AI] Verified age: ${calculatedAge} (Eligible for instant digital sign-off).`, "success");
                 }
                 
-                logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Insurance", `Entered DOB (${val}, Age: ${calculatedAge})`, "Dynamic plan eligibility check");
+                logAdminIntervention(currentUser ? currentUser.name : "User", "Insurance", `Entered DOB (${val}, Age: ${calculatedAge})`, "Dynamic plan eligibility check");
                 return;
             }
         }
@@ -309,7 +383,6 @@ function onDobInput(input) {
     ageCalcSpan.textContent = "--";
 }
 
-let attachedWaiver = false;
 function addMedicalWaiver() {
     attachedWaiver = true;
     addCopilotLog("[AI] Attached Digital Diagnostic Waiver successfully. Bypassed physical documentation requirement.", "success");
@@ -336,7 +409,6 @@ function checkInputFname(input) {
     }
 }
 
-// Reset Insurance Form
 function resetInsuranceForm() {
     const form = document.getElementById("insurance-form");
     if (form) form.reset();
@@ -350,8 +422,8 @@ function resetInsuranceForm() {
     const benButtons = document.querySelectorAll(".beneficiary-btn");
     benButtons.forEach(b => b.classList.remove("active"));
     
-    if (localProfileCache) {
-        const defaultIncomeBtn = Array.from(incButtons).find(b => b.getAttribute("data-value") === localProfileCache.incomeVal);
+    if (currentUser) {
+        const defaultIncomeBtn = Array.from(incButtons).find(b => b.getAttribute("data-value") === currentUser.incomeVal);
         if (defaultIncomeBtn) defaultIncomeBtn.classList.add("active");
     }
     
@@ -365,7 +437,7 @@ function resetInsuranceForm() {
     });
 }
 
-// Submit Insurance Form via Backend API
+// API: Onboard Form Submission + Transaction logging
 async function submitInsuranceForm() {
     const dob = document.getElementById("input-dob").value;
     const fname = document.getElementById("input-fname").value;
@@ -399,13 +471,20 @@ async function submitInsuranceForm() {
         });
         const data = await response.json();
         
+        // Write to Transaction Ledger Database
+        await addDatabaseTransaction(
+            "Insurance Setup",
+            `Policy eWealth Plus generated for Assured: ${fname} ${lname} (Beneficiary: ${payload.beneficiary})`,
+            "0"
+        );
+
         addCopilotLog(`[AI] Onboarding approved. Created Application ID: ${data.application.id}. Complete in 12s!`, "success");
         triggerNudge("Onboarding Complete!", 
             `Congratulations! Your digital policy setup is complete. Application Ref: ${data.application.id}`,
             `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('investments')">Try Investments next</button>`
         );
         
-        logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Insurance", "Form submitted successfully", `Created Policy ID ${data.application.id}`);
+        logAdminIntervention(currentUser ? currentUser.name : "User", "Insurance", "Form submitted successfully", `Created Policy ID ${data.application.id}`);
     } catch (err) {
         console.error(err);
     }
@@ -413,7 +492,7 @@ async function submitInsuranceForm() {
 
 // Form AI Autocomplete Engine
 function triggerAiAutocomplete() {
-    if (!localProfileCache) return;
+    if (!currentUser) return;
     
     addCopilotLog("[AI] Triggering adaptive auto-completion routine...", "thought");
     
@@ -428,10 +507,10 @@ function triggerAiAutocomplete() {
         
         const incButtons = document.querySelectorAll(".income-btn");
         incButtons.forEach(b => b.classList.remove("active"));
-        const targetBtn = Array.from(incButtons).find(b => b.getAttribute("data-value") === localProfileCache.incomeVal);
+        const targetBtn = Array.from(incButtons).find(b => b.getAttribute("data-value") === currentUser.incomeVal);
         if (targetBtn) targetBtn.classList.add("active");
         
-        addCopilotLog(`[AI] Retrieved tax-income statement: Estimated at ${localProfileCache.income}. Select value matches: ${localProfileCache.incomeVal}`, "info");
+        addCopilotLog(`[AI] Retrieved tax-income statement: Estimated at ${currentUser.income}. Select value matches: ${currentUser.incomeVal}`, "info");
     }, 400);
 
     setTimeout(() => {
@@ -440,10 +519,10 @@ function triggerAiAutocomplete() {
         
         const dobInput = document.getElementById("input-dob");
         if (dobInput) {
-            dobInput.value = localProfileCache.dob;
+            dobInput.value = currentUser.dob;
             onDobInput(dobInput);
         }
-        addCopilotLog("[AI] Matching national secure registry: Extracted DOB " + localProfileCache.dob, "info");
+        addCopilotLog("[AI] Matching national secure registry: Extracted DOB " + currentUser.dob, "info");
     }, 1000);
 
     setTimeout(() => {
@@ -452,10 +531,12 @@ function triggerAiAutocomplete() {
         if (groupFname) groupFname.classList.add("highlight-border-pulse");
         if (groupLname) groupLname.classList.add("highlight-border-pulse");
         
-        document.getElementById("input-fname").value = localProfileCache.fname;
-        document.getElementById("input-lname").value = localProfileCache.lname;
+        // Split name
+        const names = currentUser.name.split(" ");
+        document.getElementById("input-fname").value = names[0] || "";
+        document.getElementById("input-lname").value = names[1] || "";
         
-        addCopilotLog(`[AI] Fills verified KYC details: Name '${localProfileCache.fname} ${localProfileCache.lname}' matched.`, "info");
+        addCopilotLog(`[AI] Fills verified KYC details: Name '${currentUser.name}' matched.`, "info");
     }, 1600);
 
     setTimeout(() => {
@@ -473,11 +554,11 @@ function triggerAiAutocomplete() {
             `<button class="nudge-btn nudge-btn-primary" onclick="submitInsuranceForm()">Submit Policy Form</button>`
         );
 
-        logAdminIntervention(localProfileCache.name, "Insurance", "AI Auto-fill triggered", "Autocompleted 5 form inputs instantly");
+        logAdminIntervention(currentUser.name, "Insurance", "AI Auto-fill triggered", "Autocompleted 5 form inputs instantly");
     }, 2200);
 }
 
-// SIP Investment planner calculations
+// SIP Planner Calculations
 function updateSipCalculation() {
     const monthlyRange = document.getElementById("sip-monthly-range");
     const returnRange = document.getElementById("sip-return-range");
@@ -513,21 +594,32 @@ function updateSipCalculation() {
     }
 }
 
-// Adopt product button action
-function adoptProduct(productName) {
+// Adopt SIP Planner + Transaction logging
+async function adoptProduct(productName) {
+    const monthlyAmt = document.getElementById("sip-monthly-range").value;
+    const returnRate = document.getElementById("sip-return-range").value;
+    const years = document.getElementById("sip-period-range").value;
+
     addCopilotLog(`[AI] Product adoption request initiated: ${productName.toUpperCase()}. Creating digital auto-debit credentials.`, "thought");
     
-    setTimeout(() => {
+    setTimeout(async () => {
+        // Record in Database
+        await addDatabaseTransaction(
+            "SIP Investment Mandate",
+            `Created SIP Investment Plan (Monthly: ₹${monthlyAmt}, Expected Return: ${returnRate}%, Time: ${years} Years)`,
+            monthlyAmt
+        );
+
         addCopilotLog(`[AI] Setup successful. SIP registered successfully with your bank mandate. Auto-adoption completed.`, "success");
         triggerNudge("SIP Adoption Success", 
-            `Congratulations! You have adopted the Smart SIP investment plan. The first ₹ 5,000 auto-debit will occur on the 5th of next month.`,
+            `Congratulations! You have adopted the Smart SIP investment plan. The first ₹ ${monthlyAmt} auto-debit will occur on the 5th of next month.`,
             `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('payments')">Go to Payments</button>`
         );
-        logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Investments", `Adopted SIP Plan`, "Setup auto-debit SIP investment mandate");
+        logAdminIntervention(currentUser ? currentUser.name : "User", "Investments", `Adopted SIP Plan`, "Setup auto-debit SIP investment mandate");
     }, 1000);
 }
 
-// Payments journeys (UPI & Autopay simulation inside simulated phone)
+// Payments Setup (UPI & Autopay simulation inside simulated phone)
 function startUpiActivation() {
     const modal = document.getElementById("phone-modal");
     modal.classList.remove("hidden");
@@ -579,7 +671,14 @@ async function executePhoneUpiLink() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: amt, bankAccount: "State Bank of India (*4839)" })
         });
-        const data = await response.json();
+        await response.json();
+
+        // Write to Transaction database
+        await addDatabaseTransaction(
+            "UPI Lite Wallet Load",
+            `Activated UPI Lite wallet. Loaded ₹${amt} from primary bank account.`,
+            amt
+        );
 
         setTimeout(() => {
             addCopilotLog("[AI] UPI Lite binding validated. Activating wallet account.", "success");
@@ -604,10 +703,10 @@ async function executePhoneUpiLink() {
 
             triggerNudge("UPI Lite Activated", 
                 `Awesome! You have successfully activated UPI Lite with ₹ ${amt}. You are now ready for one-tap payments without PINs.`,
-                `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('mobile')">Go to Voice assistant</button>`
+                `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('ledger')">Go to Transaction Ledger</button>`
             );
 
-            logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Payments", "Activated UPI Lite wallet", `Loaded ₹${amt} via SMS binding`);
+            logAdminIntervention(currentUser ? currentUser.name : "User", "Payments", "Activated UPI Lite wallet", `Loaded ₹${amt} via SMS binding`);
         }, 2000);
     } catch (err) {
         console.error(err);
@@ -662,7 +761,14 @@ async function executeAutopayLink() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ biller: provider, limit })
         });
-        const data = await response.json();
+        await response.json();
+
+        // Write to Transaction database
+        await addDatabaseTransaction(
+            "Autopay Mandate",
+            `Created Standing autopay limit cap for provider: ${provider} (Max: ₹${limit})`,
+            "0"
+        );
 
         setTimeout(() => {
             addCopilotLog("[AI] Standing instruction approved by Central Payments mandate.", "success");
@@ -687,10 +793,10 @@ async function executeAutopayLink() {
 
             triggerNudge("Autopay Set Up", 
                 `Standing instruction registered with ${provider}. Future bills will be paid automatically below your capped limit of ₹ ${limit}.`,
-                `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('mobile')">Go to Voice assistant</button>`
+                `<button class="nudge-btn nudge-btn-primary" onclick="switchJourney('ledger')">Go to Transaction Ledger</button>`
             );
 
-            logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Payments", "Set up Autopay mandate", `Biller: ${provider}, Limit: ₹${limit}`);
+            logAdminIntervention(currentUser ? currentUser.name : "User", "Payments", "Set up Autopay mandate", `Biller: ${provider}, Limit: ₹${limit}`);
         }, 2000);
     } catch (err) {
         console.error(err);
@@ -702,40 +808,39 @@ function closePhoneSimulation() {
     if (modal) modal.classList.add("hidden");
 }
 
-// Speech Recognition Setup
-let recognition = null;
-if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+// Live Speech Recognition Setup
+function initWebSpeechRecognition() {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        voiceRecognitionInstance = new SpeechRecognition();
+        voiceRecognitionInstance.continuous = false;
+        voiceRecognitionInstance.lang = 'en-US';
+        voiceRecognitionInstance.interimResults = false;
+        voiceRecognitionInstance.maxAlternatives = 1;
 
-    recognition.onresult = (event) => {
-        const speechToText = event.results[0][0].transcript;
-        addCopilotLog(`[AI] Voice recognition received: "${speechToText}"`, "success");
-        executeVoiceTextCommand(speechToText);
-    };
+        voiceRecognitionInstance.onresult = (event) => {
+            const speechToText = event.results[0][0].transcript;
+            addCopilotLog(`[AI] Voice recognition received: "${speechToText}"`, "success");
+            executeVoiceTextCommand(speechToText);
+        };
 
-    recognition.onspeechend = () => {
-        recognition.stop();
-        stopListeningState();
-    };
+        voiceRecognitionInstance.onspeechend = () => {
+            voiceRecognitionInstance.stop();
+            stopListeningState();
+        };
 
-    recognition.onerror = (event) => {
-        console.error("Speech recognition error", event.error);
-        addCopilotLog(`[WARNING] Speech recognition error: ${event.error}`, "warning");
-        stopListeningState();
-        if (event.error === 'not-allowed') {
-            addVoiceMessage("Microphone permission denied. Please allow mic access in browser settings.", "system");
-        }
-    };
+        voiceRecognitionInstance.onerror = (event) => {
+            console.error("Speech recognition error", event.error);
+            addCopilotLog(`[WARNING] Speech recognition error: ${event.error}`, "warning");
+            stopListeningState();
+            if (event.error === 'not-allowed') {
+                addVoiceMessage("Microphone permission denied. Please allow mic access in browser settings.", "system");
+            }
+        };
+    }
 }
 
-// Voice assistant simulations
 function toggleVoiceListening() {
-    const mic = document.getElementById("mic-icon");
     const circle = document.querySelector(".assistant-circle");
     const waves = document.getElementById("voice-waves");
     const textStatus = document.getElementById("assistant-status");
@@ -747,12 +852,12 @@ function toggleVoiceListening() {
         textStatus.textContent = "Listening closely...";
         addCopilotLog("[AI] Listening for microphone voice input channel...", "info");
 
-        if (recognition) {
+        if (voiceRecognitionInstance) {
             try {
-                recognition.start();
+                voiceRecognitionInstance.start();
             } catch (e) {
-                recognition.stop();
-                setTimeout(() => recognition.start(), 200);
+                voiceRecognitionInstance.stop();
+                setTimeout(() => voiceRecognitionInstance.start(), 200);
             }
         } else {
             addCopilotLog("[WARNING] Live voice recognition not supported in this browser. Falling back to simulation...", "warning");
@@ -768,8 +873,8 @@ function toggleVoiceListening() {
             }, 2500);
         }
     } else {
-        if (recognition) {
-            recognition.stop();
+        if (voiceRecognitionInstance) {
+            voiceRecognitionInstance.stop();
         }
         stopListeningState();
     }
@@ -802,7 +907,7 @@ function executeVoiceTextCommand(text) {
         let actionTriggered = "";
 
         if (text.toLowerCase().includes("balance")) {
-            answer = "Sure, Ananya. Your State Bank of India Savings Account (*4839) balance is ₹ 42,910.45.";
+            answer = `Sure, ${currentUser ? currentUser.name.split(" ")[0] : 'Customer'}. Your State Bank of India Savings Account (*4839) balance is ₹ 42,910.45.`;
             actionTriggered = "Savings Account balance query";
         } else if (text.toLowerCase().includes("send") || text.toLowerCase().includes("upi")) {
             answer = "I will launch the UPI mobile portal. Let's send ₹1,500 to your mother. Opening the secure authentication panel.";
@@ -828,7 +933,7 @@ function executeVoiceTextCommand(text) {
         addVoiceMessage(answer, "system");
         addCopilotLog(`[AI] Voice execution result: "${actionTriggered}"`, "success");
         
-        logAdminIntervention(localProfileCache ? localProfileCache.name : "User", "Mobile Banking", `Voice query: "${text}"`, `Resolved with response: "${actionTriggered}"`);
+        logAdminIntervention(currentUser ? currentUser.name : "User", "Mobile Banking", `Voice query: "${text}"`, `Resolved with response: "${actionTriggered}"`);
     }, 1500);
 }
 
@@ -881,7 +986,60 @@ function sendCopilotChatMessage() {
     }, 1000);
 }
 
-// Sync Admin Logs from Backend API
+// API: Write transaction to Database
+async function addDatabaseTransaction(type, description, amount) {
+    if (!currentUser) return;
+    try {
+        const response = await fetch('/api/transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: currentUser.email,
+                type,
+                description,
+                amount
+            })
+        });
+        await response.json();
+        refreshLedgerTable();
+    } catch (err) {
+        console.error("Error logging transaction to DB:", err);
+    }
+}
+
+// API: Refresh User Transaction Ledger
+async function refreshLedgerTable() {
+    if (!currentUser) return;
+    try {
+        const response = await fetch(`/api/transactions?email=${encodeURIComponent(currentUser.email)}`);
+        const data = await response.json();
+        const tbody = document.getElementById("user-ledger-tbody");
+        if (!tbody) return;
+
+        if (data.transactions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No transactions recorded in database. Make a payment, SIP mandate, or policy submission first!</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = "";
+        data.transactions.forEach(txn => {
+            const tr = document.createElement("tr");
+            const dateText = new Date(txn.timestamp).toLocaleString();
+            tr.innerHTML = `
+                <td><span class="txn-badge">${txn.id}</span></td>
+                <td><strong>${txn.type}</strong></td>
+                <td>${txn.description}</td>
+                <td>₹ ${parseInt(txn.amount).toLocaleString("en-IN")}</td>
+                <td style="color:var(--text-muted); font-size:11px;">${dateText}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error("Error refreshing ledger table:", err);
+    }
+}
+
+// API: Sync Admin Logs
 async function refreshAdminLogs() {
     try {
         const response = await fetch('/api/admin/logs');
@@ -914,8 +1072,7 @@ async function refreshAdminLogs() {
             tbody.appendChild(tr);
         });
 
-        // Update stat counter
-        adminInterventionsCount = data.logs.length + 1800; // baselineoffset
+        adminInterventionsCount = data.logs.length + 1800; 
         const labelCount = document.getElementById("admin-active-interventions");
         if (labelCount) labelCount.textContent = adminInterventionsCount.toLocaleString();
 
@@ -924,10 +1081,10 @@ async function refreshAdminLogs() {
     }
 }
 
-// Add Admin Intervention via API
+// API: Add Admin Intervention
 async function logAdminIntervention(profileName, product, friction, action) {
     let actionColor = "blue";
-    if (action.toLowerCase().includes("complete") || action.toLowerCase().includes("success") || action.toLowerCase().includes("id")) actionColor = "green";
+    if (action.toLowerCase().includes("complete") || action.toLowerCase().includes("success") || action.toLowerCase().includes("id") || action.toLowerCase().includes("setup")) actionColor = "green";
     else if (action.toLowerCase().includes("warn") || action.toLowerCase().includes("eligibility") || action.toLowerCase().includes("dob")) actionColor = "orange";
 
     const payload = {
@@ -951,7 +1108,7 @@ async function logAdminIntervention(profileName, product, friction, action) {
     }
 }
 
-// Clear Admin Logs via API
+// API: Clear Admin Logs
 async function clearAdminLogs() {
     try {
         await fetch('/api/admin/logs', { method: 'DELETE' });

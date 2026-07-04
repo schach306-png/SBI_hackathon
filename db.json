@@ -1,0 +1,48 @@
+{
+  "users": [
+    {
+      "id": "user_young_pro",
+      "name": "Ananya Sharma",
+      "email": "ananya@sbi.com",
+      "password": "password123",
+      "age": 24,
+      "income": "8.5 Lacs",
+      "incomeVal": "7 - 10",
+      "level": "Medium",
+      "dob": "22/11/2002",
+      "risk": "High (Aggressive)",
+      "aiAdvice": "Based on your age (24) and high growth window, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal to beat inflation.",
+      "paymentSetup": {
+        "upi": false,
+        "autopay": false
+      }
+    },
+    {
+      "id": "user_first_time",
+      "name": "Ramesh Kumar",
+      "email": "ramesh@sbi.com",
+      "password": "password123",
+      "age": 55,
+      "income": "4.8 Lacs",
+      "incomeVal": "2.5 - 5",
+      "level": "Low",
+      "dob": "15/08/1971",
+      "risk": "Low (Conservative)",
+      "aiAdvice": "Ramesh, at age 55, capital safety is priority. The SBI Conservative Hybrid Mutual Fund is ideal. Starting an autopay SIP of ₹ 2,000 ensures disciplined growth with minimum digital friction.",
+      "paymentSetup": {
+        "upi": false,
+        "autopay": false
+      }
+    }
+  ],
+  "transactions": [
+    {
+      "id": "TXN-983103",
+      "userEmail": "ananya@sbi.com",
+      "type": "Onboarding",
+      "description": "SBI Life eWealth Plus Policy setup initiated",
+      "amount": "0",
+      "timestamp": "2026-07-04T10:42:00Z"
+    }
+  ]
+}
