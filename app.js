@@ -13,8 +13,8 @@ let voiceRecognitionInstance = null;
 
 // Initialize app
 document.addEventListener("DOMContentLoaded", () => {
-    // Check if session exists in localStorage
-    const savedUser = localStorage.getItem("sbi_user_session");
+    // Check if session exists in sessionStorage
+    const savedUser = sessionStorage.getItem("sbi_user_session");
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         unlockDashboard(currentUser);
@@ -91,7 +91,7 @@ async function handleAuthLogin() {
         currentUser = data.user;
         
         // Save session locally
-        localStorage.setItem("sbi_user_session", JSON.stringify(currentUser));
+        sessionStorage.setItem("sbi_user_session", JSON.stringify(currentUser));
         
         unlockDashboard(currentUser);
         addCopilotLog(`[SYS] User ${currentUser.name} successfully authenticated from JSON database.`, "success");
@@ -154,7 +154,7 @@ async function handleAuthSignup() {
 
 // API: Log Out
 function handleAuthLogout() {
-    localStorage.removeItem("sbi_user_session");
+    sessionStorage.removeItem("sbi_user_session");
     currentUser = null;
     document.getElementById("login-email").value = "";
     document.getElementById("login-password").value = "";
