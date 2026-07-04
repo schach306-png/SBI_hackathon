@@ -194,6 +194,21 @@ app.post('/api/payments/autopay', (req, res) => {
     }
 });
 
+// API: Insurance Onboarding Form Submit
+app.post('/api/insurance/onboard', (req, res) => {
+    const { fname, lname, dob, income, beneficiary, medicalWaiver } = req.body;
+    res.json({
+        success: true,
+        application: {
+            id: "APP-" + Math.floor(100000 + Math.random() * 900000),
+            fname,
+            lname,
+            dob,
+            status: "Approved"
+        }
+    });
+});
+
 
 // Mock In-memory Admin Log states (clears on restart, persistent in memory for the active session)
 let adminLogs = [
