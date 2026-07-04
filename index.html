@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBI Digital Adoption Hub - Pillar 2 (Agentic AI)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-container">
+                    <span class="logo-circle"></span>
+                    <div class="logo-text">
+                        <span class="logo-title">SBI <span class="logo-light">Life</span></span>
+                        <span class="logo-sub">eWealth & Digital Hub</span>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="pillar-tag">
+                    <span class="badge badge-purple">PILLAR 02</span>
+                    <span class="pillar-title">Digital Adoption Portal</span>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <!-- Persona Picker -->
+                <div class="persona-selector">
+                    <label for="persona-select"><i class="fa-solid fa-user-gear"></i> Persona:</label>
+                    <select id="persona-select" onchange="changePersona()">
+                        <option value="first_time">Ramesh Kumar (First-time Investor, Age 55)</option>
+                        <option value="young_pro" selected>Ananya Sharma (Tech Professional, Age 24)</option>
+                        <option value="rural_merchant">Vikram Singh (Rural Merchant, Age 42)</option>
+                    </select>
+                </div>
+
+                <!-- Mode Toggles -->
+                <div class="mode-toggles">
+                    <button class="btn-toggle active" id="btn-mode-simulator" onclick="switchMode('simulator')">
+                        <i class="fa-solid fa-laptop-code"></i> Customer Simulator
+                    </button>
+                    <button class="btn-toggle" id="btn-mode-admin" onclick="switchMode('admin')">
+                        <i class="fa-solid fa-chart-line"></i> Admin Analytics
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Grid -->
+        <div class="app-body">
+            <!-- Left Side: Interactive Area -->
+            <main class="main-content">
+                
+                <!-- CUSTOMER SIMULATOR MODE -->
+                <section id="section-simulator" class="mode-section active">
+                    <div class="simulator-layout">
+                        <!-- Navigation Sidebar for Banking Journeys -->
+                        <aside class="journey-sidebar">
+                            <h3 class="sidebar-heading">Digital Journeys</h3>
+                            <nav class="journey-nav">
+                                <button class="nav-item active" onclick="switchJourney('insurance')">
+                                    <span class="nav-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                                    <div class="nav-label">
+                                        <span class="nav-title">SBI Life Insurance</span>
+                                        <span class="nav-desc">eWealth Plus Onboarding</span>
+                                    </div>
+                                </button>
+                                <button class="nav-item" onclick="switchJourney('investments')">
+                                    <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                                    <div class="nav-label">
+                                        <span class="nav-title">Smart Investments</span>
+                                        <span class="nav-desc">SIP & Mutual Fund Planner</span>
+                                    </div>
+                                </button>
+                                <button class="nav-item" onclick="switchJourney('payments')">
+                                    <span class="nav-icon"><i class="fa-solid fa-wallet"></i></span>
+                                    <div class="nav-label">
+                                        <span class="nav-title">Instant Payments</span>
+                                        <span class="nav-desc">UPI & Autopay Setup</span>
+                                    </div>
+                                </button>
+                                <button class="nav-item" onclick="switchJourney('mobile')">
+                                    <span class="nav-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
+                                    <div class="nav-label">
+                                        <span class="nav-title">Mobile Assistant</span>
+                                        <span class="nav-desc">Voice Banking Journeys</span>
+                                    </div>
+                                </button>
+                            </nav>
+
+                            <!-- Mini User Profile Info Box -->
+                            <div class="user-profile-box">
+                                <div class="profile-header">
+                                    <i class="fa-solid fa-circle-user"></i>
+                                    <span class="profile-name" id="user-profile-name">Ananya Sharma</span>
+                                </div>
+                                <div class="profile-details">
+                                    <p><strong>Age:</strong> <span id="user-profile-age">24</span></p>
+                                    <p><strong>Income:</strong> <span id="user-profile-income">8.5 Lacs</span></p>
+                                    <p><strong>Adoption Level:</strong> <span id="user-profile-level" class="level-high">Medium</span></p>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Journey Simulator Panel -->
+                        <div class="journey-viewer">
+                            
+                            <!-- 1. SBI Insurance Journey (eWealth Plus Form) -->
+                            <div id="journey-insurance" class="journey-card active">
+                                <div class="journey-header">
+                                    <h2>Let's move ahead with your personal details</h2>
+                                    <p class="subtitle">SBI Life eWealth Plus Onboarding Form</p>
+                                </div>
+                                <div class="journey-body">
+                                    <form id="insurance-form" onsubmit="event.preventDefault();">
+                                        <!-- Income Selector -->
+                                        <div class="form-group" id="group-income">
+                                            <label class="form-label"><i class="fa-solid fa-money-bill-wave icon-purple"></i> Your Current Annual Income</label>
+                                            <div class="income-options">
+                                                <button type="button" class="income-btn" data-value="< 2.5" onclick="selectIncome(this)">&lt; 2.5 Lacs</button>
+                                                <button type="button" class="income-btn" data-value="2.5 - 5" onclick="selectIncome(this)">2.5 Lacs - 5 Lacs</button>
+                                                <button type="button" class="income-btn" data-value="5 - 7" onclick="selectIncome(this)">5 Lacs - 7 Lacs</button>
+                                                <button type="button" class="income-btn active" data-value="7 - 10" onclick="selectIncome(this)">7 Lacs - 10 Lacs</button>
+                                                <button type="button" class="income-btn" data-value="> 10" onclick="selectIncome(this)">&gt; 10 Lacs</button>
+                                            </div>
+                                            <p class="field-hint">Supporting Documents for Indicated Annual Income will be mandatory at later stage</p>
+                                        </div>
+
+                                        <!-- Date of Birth Selector -->
+                                        <div class="form-group" id="group-dob">
+                                            <label class="form-label" for="input-dob"><i class="fa-solid fa-calendar-days icon-purple"></i> Date of Birth</label>
+                                            <div class="input-with-icon">
+                                                <input type="text" id="input-dob" placeholder="DD/MM/YYYY" onfocus="focusField('dob')" oninput="onDobInput(this)">
+                                                <i class="fa-regular fa-calendar-check calendar-input-icon"></i>
+                                            </div>
+                                            <p class="field-hint" id="dob-age-helper">Your age is <span id="span-age-calc">--</span> years</p>
+                                        </div>
+
+                                        <!-- Policy Recipient Selection -->
+                                        <div class="form-group" id="group-beneficiary">
+                                            <label class="form-label"><i class="fa-solid fa-user-shield icon-purple"></i> Who is the policy for</label>
+                                            <div class="beneficiary-options">
+                                                <button type="button" class="beneficiary-btn active" data-value="Self" onclick="selectBeneficiary(this)">Self</button>
+                                                <button type="button" class="beneficiary-btn" data-value="Child" onclick="selectBeneficiary(this)">Child</button>
+                                            </div>
+                                            <p class="field-hint">Below 50 years old</p>
+                                        </div>
+
+                                        <!-- First Name / Last Name Inputs -->
+                                        <div class="form-row">
+                                            <div class="form-group" id="group-fname">
+                                                <label class="form-label" for="input-fname"><i class="fa-solid fa-user icon-purple"></i> Your First Name</label>
+                                                <input type="text" id="input-fname" placeholder="First Name" onfocus="focusField('fname')" oninput="checkInputFname(this)">
+                                            </div>
+                                            <div class="form-group" id="group-lname">
+                                                <label class="form-label" for="input-lname"><i class="fa-solid fa-user icon-purple"></i> Your Last Name</label>
+                                                <input type="text" id="input-lname" placeholder="Last Name" onfocus="focusField('lname')">
+                                            </div>
+                                        </div>
+
+                                        <!-- Form Buttons -->
+                                        <div class="form-footer">
+                                            <button type="button" class="btn btn-secondary" onclick="resetInsuranceForm()">Reset</button>
+                                            <button type="button" class="btn btn-primary" onclick="submitInsuranceForm()">Proceed <i class="fa-solid fa-arrow-right-long"></i></button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- 2. Smart Investments (SIP Planner) -->
+                            <div id="journey-investments" class="journey-card">
+                                <div class="journey-header">
+                                    <h2>Build Wealth with Smart SIPs</h2>
+                                    <p class="subtitle">Personalized Mutual Fund Digital Planner</p>
+                                </div>
+                                <div class="journey-body">
+                                    <div class="sip-planner-layout">
+                                        <div class="sip-controls">
+                                            <div class="form-group">
+                                                <div class="slider-header">
+                                                    <span class="slider-label">Monthly Investment</span>
+                                                    <span class="slider-value" id="sip-monthly-val">₹ 5,000</span>
+                                                </div>
+                                                <input type="range" min="500" max="100000" step="500" value="5000" class="range-slider" id="sip-monthly-range" oninput="updateSipCalculation()">
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <div class="slider-header">
+                                                    <span class="slider-label">Expected Return Rate (p.a.)</span>
+                                                    <span class="slider-value" id="sip-return-val">12%</span>
+                                                </div>
+                                                <input type="range" min="5" max="30" step="0.5" value="12" class="range-slider" id="sip-return-range" oninput="updateSipCalculation()">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="slider-header">
+                                                    <span class="slider-label">Time Period</span>
+                                                    <span class="slider-value" id="sip-period-val">10 Years</span>
+                                                </div>
+                                                <input type="range" min="1" max="40" step="1" value="10" class="range-slider" id="sip-period-range" oninput="updateSipCalculation()">
+                                            </div>
+                                        </div>
+
+                                        <div class="sip-results-panel">
+                                            <div class="results-grid">
+                                                <div class="result-box">
+                                                    <span class="res-lbl">Invested Amount</span>
+                                                    <span class="res-val" id="sip-invested">₹ 6,00,000</span>
+                                                </div>
+                                                <div class="result-box">
+                                                    <span class="res-lbl">Est. Returns</span>
+                                                    <span class="res-val highlight-green" id="sip-returns">₹ 5,61,695</span>
+                                                </div>
+                                                <div class="result-box span-2">
+                                                    <span class="res-lbl">Total Value</span>
+                                                    <span class="res-val highlight-purple" id="sip-total">₹ 11,61,695</span>
+                                                </div>
+                                            </div>
+                                            <!-- SVG Circle Visualization -->
+                                            <div class="sip-chart-container">
+                                                <svg width="120" height="120" viewBox="0 0 120 120" class="sip-svg-chart">
+                                                    <circle cx="60" cy="60" r="50" class="chart-bg-circle"></circle>
+                                                    <circle cx="60" cy="60" r="50" class="chart-fg-circle" id="sip-chart-ring" stroke-dasharray="314.16" stroke-dashoffset="157.08"></circle>
+                                                </svg>
+                                                <div class="chart-legend">
+                                                    <span class="legend-item"><span class="legend-dot bg-purple"></span> Invested</span>
+                                                    <span class="legend-item"><span class="legend-dot bg-green"></span> Returns</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="sip-recommender">
+                                        <div class="recommender-header">
+                                            <i class="fa-solid fa-lightbulb icon-gold"></i>
+                                            <h4>AI Investment Recommendation</h4>
+                                        </div>
+                                        <p id="sip-ai-recommendation">Based on your age (24) and stable profile, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal. This matches your medium risk tolerance.</p>
+                                        <button class="btn btn-primary btn-sm" onclick="adoptProduct('sip')">Adopt SIP Investment Plan</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Instant Payments (UPI & Autopay Setup) -->
+                            <div id="journey-payments" class="journey-card">
+                                <div class="journey-header">
+                                    <h2>Instant & Secure Payments</h2>
+                                    <p class="subtitle">Set up UPI Lite and Bills Autopay in under 1 minute</p>
+                                </div>
+                                <div class="journey-body">
+                                    <div class="payment-setup-grid">
+                                        <!-- Card 1: UPI Setup -->
+                                        <div class="setup-option-card" id="card-upi">
+                                            <div class="setup-icon"><i class="fa-solid fa-qrcode"></i></div>
+                                            <h3>Activate UPI Lite</h3>
+                                            <p>Make pinless transactions up to ₹500 instantly. Best for daily grocery and transport payments.</p>
+                                            <ul class="setup-perks">
+                                                <li><i class="fa-solid fa-check"></i> Zero transaction failures</li>
+                                                <li><i class="fa-solid fa-check"></i> No bank PIN required</li>
+                                            </ul>
+                                            <div class="setup-action" id="upi-action-area">
+                                                <button class="btn btn-primary w-100" onclick="startUpiActivation()">Activate Now</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: Autopay Setup -->
+                                        <div class="setup-option-card" id="card-autopay">
+                                            <div class="setup-icon"><i class="fa-solid fa-repeat"></i></div>
+                                            <h3>Schedule Bill Autopay</h3>
+                                            <p>Link your utility bills (electricity, water, broadband) to pay automatically on the due date.</p>
+                                            <ul class="setup-perks">
+                                                <li><i class="fa-solid fa-check"></i> Avoid late fees completely</li>
+                                                <li><i class="fa-solid fa-check"></i> Cancel or edit limits anytime</li>
+                                            </ul>
+                                            <div class="setup-action" id="autopay-action-area">
+                                                <button class="btn btn-primary w-100" onclick="startAutopayActivation()">Enable Autopay</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Phone Screen Simulation overlay for UPI details -->
+                                    <div class="simulated-phone-container hidden" id="phone-modal">
+                                        <div class="phone-frame">
+                                            <div class="phone-screen">
+                                                <div class="phone-header">
+                                                    <span class="phone-time">14:15</span>
+                                                    <div class="phone-notch"></div>
+                                                    <div class="phone-signals">
+                                                        <i class="fa-solid fa-signal"></i>
+                                                        <i class="fa-solid fa-wifi"></i>
+                                                        <i class="fa-solid fa-battery-three-quarters"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="phone-app-body" id="phone-app-content">
+                                                    <!-- Dynamic content gets loaded here via app.js -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn-close-phone" onclick="closePhoneSimulation()"><i class="fa-solid fa-xmark"></i> Close Simulation</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Mobile Assistant (Voice command portal) -->
+                            <div id="journey-mobile" class="journey-card">
+                                <div class="journey-header">
+                                    <h2>Voice-Activated Mobile Banking</h2>
+                                    <p class="subtitle">Navigate banking services hands-free using Natural Language</p>
+                                </div>
+                                <div class="journey-body">
+                                    <div class="voice-assistant-panel">
+                                        <div class="assistant-avatar-area">
+                                            <div class="voice-wave-container" id="voice-waves">
+                                                <div class="wave wave1"></div>
+                                                <div class="wave wave2"></div>
+                                                <div class="wave wave3"></div>
+                                            </div>
+                                            <div class="assistant-circle" onclick="toggleVoiceListening()">
+                                                <i class="fa-solid fa-microphone" id="mic-icon"></i>
+                                            </div>
+                                            <span class="assistant-status-text" id="assistant-status">Tap the Mic to Speak</span>
+                                        </div>
+                                        
+                                        <!-- Sample Prompts -->
+                                        <div class="sample-prompts">
+                                            <h4>Try asking the assistant:</h4>
+                                            <div class="prompt-chips">
+                                                <button class="prompt-chip" onclick="simulateVoiceCommand('Show my current savings balance')">"Show my current balance"</button>
+                                                <button class="prompt-chip" onclick="simulateVoiceCommand('Send ₹1,500 to my mom via UPI')">"Send money to mom"</button>
+                                                <button class="prompt-chip" onclick="simulateVoiceCommand('Compare term insurance plans')">"Compare term insurance plans"</button>
+                                                <button class="prompt-chip" onclick="simulateVoiceCommand('What is the interest rate of a 1-year Fixed Deposit?')">"Interest rate of 1-year FD"</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Voice Output Screen -->
+                                        <div class="voice-chat-log" id="voice-chat-box">
+                                            <div class="voice-msg system-msg">
+                                                <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+                                                <div class="msg-text">Hello! I am your SBI Digital Assistant. You can ask me to navigate, search policies, or execute banking tasks. Try tapping the microphone or choosing a prompt above!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ADMIN ANALYTICS MODE -->
+                <section id="section-admin" class="mode-section">
+                    <div class="admin-dashboard-layout">
+                        <div class="admin-header-summary">
+                            <h2>SBI Digital Adoption Analytics</h2>
+                            <p class="subtitle">Monitoring Agentic AI effectiveness in Pillar 2 (Digital Adoption)</p>
+                        </div>
+
+                        <!-- Statistics Counters -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-light-purple"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value">78.4%</span>
+                                    <span class="stat-label">Digital Adoption Rate</span>
+                                    <span class="stat-trend trend-up"><i class="fa-solid fa-caret-up"></i> +12.3% MoM</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon bg-light-blue"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value" id="admin-active-interventions">1,842</span>
+                                    <span class="stat-label">Active AI Interventions</span>
+                                    <span class="stat-trend trend-up"><i class="fa-solid fa-caret-up"></i> +342 today</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon bg-light-green"><i class="fa-solid fa-circle-check"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value">86.2%</span>
+                                    <span class="stat-label">Friction Resolution Rate</span>
+                                    <span class="stat-trend trend-up"><i class="fa-solid fa-caret-up"></i> +4.5% vs last Q</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon bg-light-orange"><i class="fa-solid fa-user-slash"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value">11.8%</span>
+                                    <span class="stat-label">Form Dropout Rate</span>
+                                    <span class="stat-trend trend-down"><i class="fa-solid fa-caret-down"></i> -6.2% MoM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Graph & Logs Layout -->
+                        <div class="admin-panels">
+                            <!-- Visual Adoption Graph -->
+                            <div class="admin-card panel-graph">
+                                <div class="card-title-bar">
+                                    <h3>Adoption Trend (Pre vs Post Agentic AI)</h3>
+                                    <span class="badge badge-green">AI Active</span>
+                                </div>
+                                <div class="graph-placeholder">
+                                    <!-- Embedded SVG Line Graph -->
+                                    <svg viewBox="0 0 500 200" class="analytics-line-graph">
+                                        <!-- Grids -->
+                                        <line x1="40" y1="20" x2="480" y2="20" stroke="#f1eaf7" stroke-width="1"/>
+                                        <line x1="40" y1="60" x2="480" y2="60" stroke="#f1eaf7" stroke-width="1"/>
+                                        <line x1="40" y1="100" x2="480" y2="100" stroke="#f1eaf7" stroke-width="1"/>
+                                        <line x1="40" y1="140" x2="480" y2="140" stroke="#f1eaf7" stroke-width="1"/>
+                                        <line x1="40" y1="180" x2="480" y2="180" stroke="#bbadc4" stroke-width="2"/>
+                                        <line x1="40" y1="20" x2="40" y2="180" stroke="#bbadc4" stroke-width="2"/>
+
+                                        <!-- Pre-AI Dotted Line -->
+                                        <path d="M 40 130 Q 120 125, 200 135 T 320 140 T 480 135" fill="none" stroke="#bbb" stroke-width="2" stroke-dasharray="4,4"/>
+                                        <!-- Post-AI Trend Path -->
+                                        <path d="M 40 130 Q 120 120, 200 115 T 320 65 T 480 40" fill="none" stroke="#3C0675" stroke-width="3"/>
+                                        
+                                        <!-- Dots -->
+                                        <circle cx="200" cy="115" r="4" fill="#3C0675"/>
+                                        <circle cx="320" cy="65" r="4" fill="#3C0675"/>
+                                        <circle cx="480" cy="40" r="5" fill="#00A4E4"/>
+                                        
+                                        <!-- Labels -->
+                                        <text x="35" y="133" font-size="9" fill="#777" text-anchor="end">50%</text>
+                                        <text x="35" y="103" font-size="9" fill="#777" text-anchor="end">65%</text>
+                                        <text x="35" y="63" font-size="9" fill="#777" text-anchor="end">80%</text>
+                                        <text x="35" y="23" font-size="9" fill="#777" text-anchor="end">95%</text>
+                                        
+                                        <text x="40" y="195" font-size="9" fill="#777" text-anchor="middle">Jan</text>
+                                        <text x="120" y="195" font-size="9" fill="#777" text-anchor="middle">Feb</text>
+                                        <text x="200" y="195" font-size="9" fill="#777" text-anchor="middle">Mar (AI Launch)</text>
+                                        <text x="320" y="195" font-size="9" fill="#777" text-anchor="middle">May</text>
+                                        <text x="480" y="195" font-size="9" fill="#777" text-anchor="end">July</text>
+                                    </svg>
+                                    <div class="graph-legend">
+                                        <span class="legend-item"><span class="legend-dot bg-grey"></span> Without AI Assistance</span>
+                                        <span class="legend-item"><span class="legend-dot bg-primary"></span> With Agentic AI (Pillar 2)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Real-time AI Interventions logs -->
+                            <div class="admin-card panel-logs">
+                                <div class="card-title-bar">
+                                    <h3>Real-Time AI Intervention Log</h3>
+                                    <button class="btn btn-secondary btn-xs" onclick="clearAdminLogs()">Clear Logs</button>
+                                </div>
+                                <div class="admin-logs-container">
+                                    <table class="logs-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>User Profile</th>
+                                                <th>Product</th>
+                                                <th>Friction Identified</th>
+                                                <th>AI Actions Taken</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-logs-tbody">
+                                            <!-- Log records generated dynamically in app.js -->
+                                            <tr>
+                                                <td class="log-time">14:12:02</td>
+                                                <td><span class="log-profile">Ramesh (Elderly)</span></td>
+                                                <td><span class="badge-tag tag-ins">Insurance</span></td>
+                                                <td class="log-friction">Form paused on DOB (22s)</td>
+                                                <td class="log-action"><span class="badge-action green">Calculated Age & Autocompleted</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="log-time">14:10:45</td>
+                                                <td><span class="log-profile">Ananya (Young Pro)</span></td>
+                                                <td><span class="badge-tag tag-pay">Payments</span></td>
+                                                <td class="log-friction">Hesitation on UPI Lite limits</td>
+                                                <td class="log-action"><span class="badge-action blue">Provided Micro-comparison</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="log-time">14:08:15</td>
+                                                <td><span class="log-profile">Vikram (Merchant)</span></td>
+                                                <td><span class="badge-tag tag-inv">Investments</span></td>
+                                                <td class="log-friction">Confused by compound interest SIP math</td>
+                                                <td class="log-action"><span class="badge-action orange">Triggered SVG return planner tooltip</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Right Side: Agentic AI Co-Pilot Panel -->
+            <aside class="copilot-panel">
+                <div class="copilot-header">
+                    <div class="copilot-title">
+                        <span class="pulse-indicator status-scanning" id="copilot-pulse"></span>
+                        <div class="title-details">
+                            <h3>SBI Agentic AI Co-Pilot</h3>
+                            <span class="subtitle" id="copilot-status-text">Scanning for user friction...</span>
+                        </div>
+                    </div>
+                    <!-- Quick Autocomplete trigger -->
+                    <button class="btn-autocomplete" onclick="triggerAiAutocomplete()" title="AI Autocomplete Form"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill</button>
+                </div>
+
+                <!-- Scrollable Log/Reasoning window -->
+                <div class="copilot-log-window">
+                    <div class="window-title"><i class="fa-solid fa-code"></i> AI CO-PILOT REASONING LOG</div>
+                    <div class="log-entries" id="copilot-logs">
+                        <div class="log-entry log-system">[SYS] AI Co-Pilot Core V2.4 initialized. Ready to assist.</div>
+                        <div class="log-entry log-success">[AI] Loaded user profile: Ananya Sharma (Medium digital maturity).</div>
+                    </div>
+                </div>
+
+                <!-- Contextual Nudge/Tip card (Updates dynamically based on where cursor is) -->
+                <div class="nudge-container">
+                    <div class="nudge-card pulse-nudge" id="copilot-nudge-box">
+                        <div class="nudge-header">
+                            <span class="nudge-icon"><i class="fa-solid fa-circle-question"></i></span>
+                            <h4 id="nudge-title">Need help with the form?</h4>
+                        </div>
+                        <div class="nudge-body" id="nudge-content">
+                            Hover over or click any field, and I'll display real-time contextual helpers and safety tips right here. You can also click the **Auto-fill** button above to simulate how the AI assistant instantly retrieves verified data.
+                        </div>
+                        <div class="nudge-actions" id="nudge-actions-area">
+                            <!-- Action buttons appear dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Box at bottom of co-pilot -->
+                <div class="copilot-chat-container">
+                    <div class="chat-input-wrapper">
+                        <input type="text" id="copilot-chat-input" placeholder="Ask AI a question... (e.g. 'why self?')" onkeydown="if(event.key === 'Enter') sendCopilotChatMessage()">
+                        <button class="btn-send-chat" onclick="sendCopilotChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <script src="app.js"></script>
+</body>
+</html>
