@@ -33,6 +33,23 @@
         "upi": false,
         "autopay": false
       }
+    },
+    {
+      "id": "user_891767",
+      "name": "subham gupta",
+      "email": "subhamgupta@sbi.com",
+      "password": "sg8336918299",
+      "age": 25,
+      "income": "2.5 - 5 Lacs",
+      "incomeVal": "2.5 - 5",
+      "level": "Medium",
+      "dob": "01/01/2001",
+      "risk": "High (Aggressive)",
+      "aiAdvice": "Based on your age (25) and profile, starting an equity-heavy SIP of ₹ 5,000 for 10+ years is ideal to beat inflation.",
+      "paymentSetup": {
+        "upi": true,
+        "autopay": false
+      }
     }
   ],
   "transactions": [
@@ -43,6 +60,78 @@
       "description": "SBI Life eWealth Plus Policy setup initiated",
       "amount": "0",
       "timestamp": "2026-07-04T10:42:00Z"
+    },
+    {
+      "id": "TXN-574027",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "UPI Lite Wallet Load",
+      "description": "Activated UPI Lite wallet. Loaded ₹500 from primary bank account.",
+      "amount": "500",
+      "timestamp": "2026-07-04T11:30:23.350Z"
+    },
+    {
+      "id": "TXN-639792",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "UPI Lite Wallet Load",
+      "description": "Activated UPI Lite wallet. Loaded ₹500 from primary bank account.",
+      "amount": "500",
+      "timestamp": "2026-07-04T11:32:07.119Z"
+    },
+    {
+      "id": "TXN-706360",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "UPI Lite Wallet Load",
+      "description": "Activated UPI Lite wallet. Loaded ₹500 from primary bank account.",
+      "amount": "500",
+      "timestamp": "2026-07-04T11:35:29.281Z"
+    },
+    {
+      "id": "TXN-483418",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "Insurance Setup",
+      "description": "Policy eWealth Plus generated for Assured: subham gupta (Beneficiary: Self)",
+      "amount": "0",
+      "timestamp": "2026-07-04T11:44:39.957Z"
+    },
+    {
+      "id": "TXN-811851",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "Insurance Setup",
+      "description": "Policy eWealth Plus generated for Assured: subham gupta (Beneficiary: Self)",
+      "amount": "0",
+      "timestamp": "2026-07-04T11:44:43.805Z"
+    },
+    {
+      "id": "TXN-540713",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "Insurance Setup",
+      "description": "Policy eWealth Plus generated for Assured: subham gupta (Beneficiary: Self)",
+      "amount": "0",
+      "timestamp": "2026-07-04T11:44:44.904Z"
+    },
+    {
+      "id": "TXN-596707",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "SIP Investment Mandate",
+      "description": "Created SIP Investment Plan (Monthly: ₹5000, Expected Return: 12%, Time: 10 Years)",
+      "amount": "5000",
+      "timestamp": "2026-07-04T11:44:58.455Z"
+    },
+    {
+      "id": "TXN-819558",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "Insurance Setup",
+      "description": "Policy eWealth Plus generated for Assured: subham gupta (Beneficiary: Self)",
+      "amount": "0",
+      "timestamp": "2026-07-04T11:45:18.411Z"
+    },
+    {
+      "id": "TXN-920426",
+      "userEmail": "subhamgupta@sbi.com",
+      "type": "Insurance Setup",
+      "description": "Policy eWealth Plus generated for Assured: subham gupta (Beneficiary: Self)",
+      "amount": "0",
+      "timestamp": "2026-07-04T11:45:25.348Z"
     }
   ]
 }
