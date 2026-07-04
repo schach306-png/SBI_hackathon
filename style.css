@@ -881,18 +881,19 @@ body {
 
 /* Phone screen modal */
 .simulated-phone-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(32, 4, 60, 0.4);
-    backdrop-filter: blur(4px);
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(32, 4, 60, 0.6);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
-    border-radius: var(--radius-lg);
+    z-index: 9999;
     animation: fadeIn var(--transition-fast);
     flex-direction: column;
     gap: 16px;

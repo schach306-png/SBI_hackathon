@@ -287,26 +287,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Phone Screen Simulation overlay for UPI details -->
-                                    <div class="simulated-phone-container hidden" id="phone-modal">
-                                        <div class="phone-frame">
-                                            <div class="phone-screen">
-                                                <div class="phone-header">
-                                                    <span class="phone-time">14:15</span>
-                                                    <div class="phone-notch"></div>
-                                                    <div class="phone-signals">
-                                                        <i class="fa-solid fa-signal"></i>
-                                                        <i class="fa-solid fa-wifi"></i>
-                                                        <i class="fa-solid fa-battery-three-quarters"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="phone-app-body" id="phone-app-content">
-                                                    <!-- Dynamic content gets loaded here via app.js -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button class="btn-close-phone" onclick="closePhoneSimulation()"><i class="fa-solid fa-xmark"></i> Close Simulation</button>
-                                    </div>
+
                                 </div>
                             </div>
 
@@ -546,6 +527,27 @@
                 </div>
             </aside>
         </div>
+    </div>
+
+    <!-- Phone Screen Simulation overlay for UPI details -->
+    <div class="simulated-phone-container hidden" id="phone-modal">
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <div class="phone-header">
+                    <span class="phone-time">14:15</span>
+                    <div class="phone-notch"></div>
+                    <div class="phone-signals">
+                        <i class="fa-solid fa-signal"></i>
+                        <i class="fa-solid fa-wifi"></i>
+                        <i class="fa-solid fa-battery-three-quarters"></i>
+                    </div>
+                </div>
+                <div class="phone-app-body" id="phone-app-content">
+                    <!-- Dynamic content gets loaded here via app.js -->
+                </div>
+            </div>
+        </div>
+        <button class="btn-close-phone" onclick="closePhoneSimulation()"><i class="fa-solid fa-xmark"></i> Close Simulation</button>
     </div>
 
     <!-- Script imports -->
