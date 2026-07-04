@@ -702,6 +702,37 @@ function closePhoneSimulation() {
     if (modal) modal.classList.add("hidden");
 }
 
+// Speech Recognition Setup
+let recognition = null;
+if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        addCopilotLog(`[AI] Voice recognition received: "${speechToText}"`, "success");
+        executeVoiceTextCommand(speechToText);
+    };
+
+    recognition.onspeechend = () => {
+        recognition.stop();
+        stopListeningState();
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        addCopilotLog(`[WARNING] Speech recognition error: ${event.error}`, "warning");
+        stopListeningState();
+        if (event.error === 'not-allowed') {
+            addVoiceMessage("Microphone permission denied. Please allow mic access in browser settings.", "system");
+        }
+    };
+}
+
 // Voice assistant simulations
 function toggleVoiceListening() {
     const mic = document.getElementById("mic-icon");
@@ -716,17 +747,30 @@ function toggleVoiceListening() {
         textStatus.textContent = "Listening closely...";
         addCopilotLog("[AI] Listening for microphone voice input channel...", "info");
 
-        setTimeout(() => {
-            const promptOptions = [
-                "Show my current savings balance",
-                "Send ₹1,500 to my mom via UPI",
-                "Compare term insurance plans",
-                "What is the interest rate of a 1-year Fixed Deposit?"
-            ];
-            const randPrompt = promptOptions[Math.floor(Math.random() * promptOptions.length)];
-            executeVoiceTextCommand(randPrompt);
-        }, 2500);
+        if (recognition) {
+            try {
+                recognition.start();
+            } catch (e) {
+                recognition.stop();
+                setTimeout(() => recognition.start(), 200);
+            }
+        } else {
+            addCopilotLog("[WARNING] Live voice recognition not supported in this browser. Falling back to simulation...", "warning");
+            setTimeout(() => {
+                const promptOptions = [
+                    "Show my current savings balance",
+                    "Send ₹1,500 to my mom via UPI",
+                    "Compare term insurance plans",
+                    "What is the interest rate of a 1-year Fixed Deposit?"
+                ];
+                const randPrompt = promptOptions[Math.floor(Math.random() * promptOptions.length)];
+                executeVoiceTextCommand(randPrompt);
+            }, 2500);
+        }
     } else {
+        if (recognition) {
+            recognition.stop();
+        }
         stopListeningState();
     }
 }
@@ -777,8 +821,8 @@ function executeVoiceTextCommand(text) {
             answer = "The current SBI annual interest rate for a 1-Year Fixed Deposit is 6.80% p.a. for standard accounts and 7.30% p.a. for Senior Citizens.";
             actionTriggered = "FD interest rates query";
         } else {
-            answer = "We sincerely apologize for the delay and any inconvenience you have experienced. Our automated systems are currently unable to retrieve the precise data or process this request. A customer care representative has been notified and will contact you directly to resolve your issue shortly. Thank you for your valuable patience.";
-            actionTriggered = "Unmatched query - Customer service notification triggered";
+            answer = `We sincerely apologize for the delay and any inconvenience you have experienced. Our automated systems are currently unable to retrieve the precise data or process this request. We have registered your request regarding: "${text}". A customer care representative has been notified and will contact you directly to resolve this issue shortly. Thank you for your valuable patience.`;
+            actionTriggered = `Unmatched query logged: "${text}"`;
         }
 
         addVoiceMessage(answer, "system");
