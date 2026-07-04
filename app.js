@@ -1,5 +1,8 @@
 // SBI Digital Adoption Hub - Pillar 2 (Agentic AI) Simulation Logic
 // Upgraded to support User Sign Up, Log In, and Transaction ledgers in JSON Database
+// Compatible with both direct file:// loading and http://localhost:3000/ server loading
+
+const API_BASE = window.location.origin.startsWith('file://') ? 'http://localhost:3000' : '';
 
 let activeJourney = "insurance";
 let voiceListening = false;
@@ -73,7 +76,7 @@ async function handleAuthLogin() {
     errorBanner.classList.add("hidden");
 
     try {
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch(API_BASE + '/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -113,7 +116,7 @@ async function handleAuthSignup() {
     errorBanner.classList.add("hidden");
 
     try {
-        const response = await fetch('/api/auth/signup', {
+        const response = await fetch(API_BASE + '/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, age, incomeGroup })
@@ -293,7 +296,7 @@ function setupFrictionTracking() {
         dobInput.addEventListener("mouseenter", () => {
             addCopilotLog("[AI] Checking user's date of birth field interaction...", "thought");
             triggerNudge("DOB Guidance Helper", 
-                "Entering DOB determines policy pricing and eligibility. Ensure format is DD/MM/YYYY. The AI autocalculates your exact banking age in real-time.",
+                "Entering DOB determines policy pricing and eligibility. Ensure format is DD/MM/YYYY. The AI autocalates your exact banking age in real-time.",
                 `<button class="nudge-btn nudge-btn-primary" onclick="simulateDobFill()">Auto-fill DOB</button>`
             );
         });
@@ -464,7 +467,7 @@ async function submitInsuranceForm() {
     };
 
     try {
-        const response = await fetch('/api/insurance/onboard', {
+        const response = await fetch(API_BASE + '/api/insurance/onboard', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -666,7 +669,7 @@ async function executePhoneUpiLink() {
     `;
 
     try {
-        const response = await fetch('/api/payments/upi', {
+        const response = await fetch(API_BASE + '/api/payments/upi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: amt, bankAccount: "State Bank of India (*4839)" })
@@ -756,7 +759,7 @@ async function executeAutopayLink() {
     `;
 
     try {
-        const response = await fetch('/api/payments/autopay', {
+        const response = await fetch(API_BASE + '/api/payments/autopay', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ biller: provider, limit })
@@ -990,7 +993,7 @@ function sendCopilotChatMessage() {
 async function addDatabaseTransaction(type, description, amount) {
     if (!currentUser) return;
     try {
-        const response = await fetch('/api/transactions', {
+        const response = await fetch(API_BASE + '/api/transactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1011,7 +1014,7 @@ async function addDatabaseTransaction(type, description, amount) {
 async function refreshLedgerTable() {
     if (!currentUser) return;
     try {
-        const response = await fetch(`/api/transactions?email=${encodeURIComponent(currentUser.email)}`);
+        const response = await fetch(API_BASE + `/api/transactions?email=${encodeURIComponent(currentUser.email)}`);
         const data = await response.json();
         const tbody = document.getElementById("user-ledger-tbody");
         if (!tbody) return;
@@ -1042,7 +1045,7 @@ async function refreshLedgerTable() {
 // API: Sync Admin Logs
 async function refreshAdminLogs() {
     try {
-        const response = await fetch('/api/admin/logs');
+        const response = await fetch(API_BASE + '/api/admin/logs');
         const data = await response.json();
         const tbody = document.getElementById("admin-logs-tbody");
         if (!tbody) return;
@@ -1096,7 +1099,7 @@ async function logAdminIntervention(profileName, product, friction, action) {
     };
 
     try {
-        const response = await fetch('/api/admin/logs', {
+        const response = await fetch(API_BASE + '/api/admin/logs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1111,7 +1114,7 @@ async function logAdminIntervention(profileName, product, friction, action) {
 // API: Clear Admin Logs
 async function clearAdminLogs() {
     try {
-        await fetch('/api/admin/logs', { method: 'DELETE' });
+        await fetch(API_BASE + '/api/admin/logs', { method: 'DELETE' });
         refreshAdminLogs();
     } catch (err) {
         console.error(err);
