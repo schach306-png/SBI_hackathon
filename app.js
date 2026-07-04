@@ -777,8 +777,8 @@ function executeVoiceTextCommand(text) {
             answer = "The current SBI annual interest rate for a 1-Year Fixed Deposit is 6.80% p.a. for standard accounts and 7.30% p.a. for Senior Citizens.";
             actionTriggered = "FD interest rates query";
         } else {
-            answer = "I can guide you through these forms, check your DOB verification, auto-fill standard fields, or outline details on insurance rates. Let me know what you'd like to do!";
-            actionTriggered = "General help assistant advice";
+            answer = "We sincerely apologize for the delay and any inconvenience you have experienced. Our automated systems are currently unable to retrieve the precise data or process this request. A customer care representative has been notified and will contact you directly to resolve your issue shortly. Thank you for your valuable patience.";
+            actionTriggered = "Unmatched query - Customer service notification triggered";
         }
 
         addVoiceMessage(answer, "system");
@@ -826,7 +826,7 @@ function sendCopilotChatMessage() {
         } else if (text.toLowerCase().includes("rate") || text.toLowerCase().includes("sip")) {
             aiReply = "SIP returns are calculated on average CAGR (Compound Annual Growth Rate). Equities average 12-15% over a 10-year period.";
         } else {
-            aiReply = "I can guide you through these forms, check your DOB verification, auto-fill standard fields, or outline details on insurance rates. Ask me about specific fields!";
+            aiReply = "We sincerely apologize for the delay and any inconvenience you have faced. The system has logged your query but is currently unable to provide an automated resolution due to incomplete data records. A customer care specialist will contact you directly to resolve this matter shortly. Thank you for your valuable patience.";
         }
 
         addCopilotLog(`[AI] Response: ${aiReply}`, "success");
