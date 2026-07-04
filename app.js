@@ -672,7 +672,7 @@ async function executePhoneUpiLink() {
         const response = await fetch(API_BASE + '/api/payments/upi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: amt, bankAccount: "State Bank of India (*4839)" })
+            body: JSON.stringify({ email: currentUser.email, amount: amt, bankAccount: "State Bank of India (*4839)" })
         });
         await response.json();
 
@@ -762,7 +762,7 @@ async function executeAutopayLink() {
         const response = await fetch(API_BASE + '/api/payments/autopay', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ biller: provider, limit })
+            body: JSON.stringify({ email: currentUser.email, biller: provider, limit })
         });
         await response.json();
 

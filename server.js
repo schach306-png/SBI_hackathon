@@ -160,6 +160,41 @@ app.get('/api/transactions', (req, res) => {
     res.json({ transactions: userTxns });
 });
 
+// API: Setup UPI Lite wallet
+app.post('/api/payments/upi', (req, res) => {
+    const { email, amount, bankAccount } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+    const db = readDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+        user.paymentSetup.upi = true;
+        writeDB(db);
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: "User not found" });
+    }
+});
+
+// API: Setup Autopay
+app.post('/api/payments/autopay', (req, res) => {
+    const { email, biller, limit } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+    const db = readDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+        user.paymentSetup.autopay = true;
+        writeDB(db);
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: "User not found" });
+    }
+});
+
+
 // Mock In-memory Admin Log states (clears on restart, persistent in memory for the active session)
 let adminLogs = [
     {
